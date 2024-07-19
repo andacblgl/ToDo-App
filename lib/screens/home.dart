@@ -16,12 +16,27 @@ class _HomeState extends State<Home> {
   List<Todo> _foundToDo = [];
   final _todoController = TextEditingController();
   final List<DateTime> dateList = [];
+  bool _isButtonDisabled = true;
 
   @override
   void initState() {
+    super.initState();
     _generateDateList();
     _foundToDo = todosList;
-    super.initState();
+    _todoController.addListener(_updateButtonState);
+  }
+
+  void _updateButtonState() {
+    setState(() {
+      _isButtonDisabled = _todoController.text.isEmpty;
+    });
+  }
+
+  @override
+  void dispose() {
+    _todoController.removeListener(_updateButtonState);
+    _todoController.dispose();
+    super.dispose();
   }
 
   @override
@@ -144,9 +159,11 @@ class _HomeState extends State<Home> {
                       fontSize: 40,
                     ),
                   ),
-                  onPressed: () {
-                    _addToDoItem(_todoController.text);
-                  },
+                  onPressed: _isButtonDisabled
+                      ? null
+                      : () {
+                          _addToDoItem(_todoController.text);
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: tdBlue,
                     minimumSize: Size(60, 60),
@@ -174,15 +191,6 @@ class _HomeState extends State<Home> {
   }
 
   void _addToDoItem(String toDo) {
-    if (toDo.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please enter a To Do item'),
-        ),
-      );
-      return;
-    }
-
     setState(() {
       todosList.add(Todo(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
